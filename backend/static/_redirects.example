@@ -1,0 +1,3 @@
+# Cloudflare Pages API Proxy Redirects
+# Replace 'https://your-fastapi-backend.onrender.com' with your actual deployed FastAPI backend URL
+/api/*  https://your-fastapi-backend.onrender.com/api/:splat  200
