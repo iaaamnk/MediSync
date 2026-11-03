@@ -1,0 +1,11 @@
+{
+  "name": "MediSync Hospital Dashboard",
+  "short_name": "MediSync",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0F766E",
+  "theme_color": "#0D9488",
+  "description": "MediSync Hospital Dashboard System with Patient and Doctor Portals",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}
