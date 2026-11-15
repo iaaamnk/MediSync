@@ -92,10 +92,13 @@ class _PatientPortalScreenState extends State<PatientPortalScreen> with SingleTi
       _isVoiceLoading = true;
       _voiceResponse = null;
     });
-    final res = await ApiService.askVoiceQuery(text, reportId: _currentReport?.id);
+    final res = await ApiService.sendChatMessage(
+      message: text,
+      reportId: _currentReport?.id,
+    );
     setState(() {
       _isVoiceLoading = false;
-      _voiceResponse = res?['speech_response'] ?? "Could not generate voice response.";
+      _voiceResponse = res?['reply'] ?? "Could not generate response.";
     });
   }
 

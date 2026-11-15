@@ -323,6 +323,13 @@ function renderAnalysis(record) {
   // Pre-fill appointment token
   document.getElementById("appt-report-token").value = record.token;
   document.getElementById("appt-patient-name").value = record.patient_name || "";
+
+  // Update RAG Chatbot active report badge
+  const chatBadge = document.getElementById("chat-active-report-badge");
+  if (chatBadge) {
+    chatBadge.innerText = `📄 Active: ${record.patient_name || 'Patient'} (${record.token})`;
+    chatBadge.classList.add("active");
+  }
 }
 
 function copyToken() {
@@ -695,13 +702,16 @@ async function updateApptStatus(apptId, status) {
 }
 
 // ==========================================
-// VOICE PIPELINE (Web Speech API + Backend AI + TTS)
+// RAG CLINICAL & APPOINTMENT CHATBOT (Web Speech + AI Chat + Grounded RAG)
 // ==========================================
+
+let chatHistory = [];
+let isChatSubmitting = false;
 
 function initVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    document.getElementById("voice-status-text").innerText = "Speech recognition not natively supported in this browser. You can type below.";
+    console.warn("Speech recognition not natively supported in this browser.");
     return;
   }
 
@@ -713,33 +723,37 @@ function initVoiceRecognition() {
   speechRecognition.onstart = () => {
     isRecordingVoice = true;
     const micBtn = document.getElementById("mic-btn");
-    micBtn.classList.add("listening");
-    document.getElementById("voice-status-text").innerText = "Listening... Speak your question now.";
+    if (micBtn) micBtn.classList.add("listening");
   };
 
   speechRecognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
-    document.getElementById("voice-status-text").innerText = `Processing: "${transcript}"`;
-    sendVoiceQuery(transcript);
+    const input = document.getElementById("chat-text-input");
+    if (input) input.value = transcript;
+    submitChatMessage();
   };
 
   speechRecognition.onerror = (event) => {
     console.error("Speech Recognition Error:", event.error);
     isRecordingVoice = false;
-    document.getElementById("mic-btn").classList.remove("listening");
-    document.getElementById("voice-status-text").innerText = `Voice error (${event.error}). Try again or type below.`;
+    const micBtn = document.getElementById("mic-btn");
+    if (micBtn) micBtn.classList.remove("listening");
   };
 
   speechRecognition.onend = () => {
     isRecordingVoice = false;
-    document.getElementById("mic-btn").classList.remove("listening");
+    const micBtn = document.getElementById("mic-btn");
+    if (micBtn) micBtn.classList.remove("listening");
   };
 }
 
 function toggleVoiceRecording() {
   if (!speechRecognition) {
     initVoiceRecognition();
-    if (!speechRecognition) return;
+    if (!speechRecognition) {
+      alert("Speech recognition is not supported in this browser. Please use keyboard text input.");
+      return;
+    }
   }
 
   if (isRecordingVoice) {
@@ -753,44 +767,218 @@ function toggleVoiceRecording() {
   }
 }
 
-function askPresetVoice(query) {
-  document.getElementById("voice-text-input").value = query;
-  submitTextVoiceQuery();
+function sendChatPrompt(prompt) {
+  const input = document.getElementById("chat-text-input");
+  if (input) {
+    input.value = prompt;
+    submitChatMessage();
+  }
 }
 
-function submitTextVoiceQuery() {
-  const input = document.getElementById("voice-text-input");
-  const query = input.value.trim();
-  if (!query) return;
-  sendVoiceQuery(query);
+function escapeHtml(text) {
+  if (!text) return "";
+  const div = document.createElement("div");
+  div.innerText = text;
+  return div.innerHTML;
+}
+
+function formatChatMarkdown(text) {
+  if (!text) return "";
+  let formatted = escapeHtml(text);
+  
+  // Format bold **text**
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Format italics *text*
+  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Format blockquotes (> note)
+  formatted = formatted.replace(/^(&gt;|>)\s?(.*)$/gm, '<blockquote>$2</blockquote>');
+  
+  // Format bullet points (• or -)
+  const lines = formatted.split('\n');
+  let inList = false;
+  let resultLines = [];
+  
+  for (let line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+      if (!inList) {
+        resultLines.push('<ul style="margin: 0.35rem 0 0.5rem 1rem; padding-left: 0.5rem;">');
+        inList = true;
+      }
+      resultLines.push(`<li>${trimmed.substring(2)}</li>`);
+    } else {
+      if (inList) {
+        resultLines.push('</ul>');
+        inList = false;
+      }
+      if (trimmed.length > 0) {
+        resultLines.push(`<p style="margin-bottom: 0.4rem;">${line}</p>`);
+      }
+    }
+  }
+  if (inList) {
+    resultLines.push('</ul>');
+  }
+  
+  return resultLines.join('\n');
+}
+
+async function submitChatMessage() {
+  if (isChatSubmitting) return;
+  const input = document.getElementById("chat-text-input");
+  const message = input ? input.value.trim() : "";
+  if (!message) return;
+
+  // Clear input
   input.value = "";
-}
+  
+  const msgBox = document.getElementById("chat-messages-box");
+  if (!msgBox) return;
 
-async function sendVoiceQuery(queryText) {
-  document.getElementById("voice-status-text").innerText = "Generating AI audio response...";
+  // Append user message
+  const userRow = document.createElement("div");
+  userRow.className = "chat-msg-row user";
+  userRow.innerHTML = `
+    <div class="chat-bubble">
+      <p>${escapeHtml(message)}</p>
+    </div>
+    <div class="chat-avatar">👤</div>
+  `;
+  msgBox.appendChild(userRow);
+
+  // Append loading indicator
+  const loadingRow = document.createElement("div");
+  loadingRow.className = "chat-msg-row assistant";
+  loadingRow.id = "chat-msg-loading";
+  loadingRow.innerHTML = `
+    <div class="chat-avatar">🩺</div>
+    <div class="chat-bubble">
+      <p style="color: var(--gray-500); font-style: italic;">
+        <span>🔍</span> Searching laboratory values & clinical knowledge base...
+      </p>
+    </div>
+  `;
+  msgBox.appendChild(loadingRow);
+  msgBox.scrollTop = msgBox.scrollHeight;
+
+  isChatSubmitting = true;
 
   try {
-    const res = await fetch("/api/voice/query", {
+    const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        query_text: queryText,
-        report_id: currentReport ? currentReport.id : null
+        message: message,
+        report_id: currentReport ? currentReport.id : null,
+        history: chatHistory.slice(-8) // Send recent context
       })
     });
 
     const data = await res.json();
-    lastVoiceTextResponse = data.speech_response;
+    
+    // Remove loading row
+    const loadingEl = document.getElementById("chat-msg-loading");
+    if (loadingEl) loadingEl.remove();
 
-    document.getElementById("voice-user-transcript").innerText = data.transcript;
-    document.getElementById("voice-ai-answer").innerText = data.speech_response;
-    document.getElementById("voice-response-container").style.display = "block";
-    document.getElementById("voice-status-text").innerText = "Response ready.";
+    if (data.reply) {
+      chatHistory.push({ role: "user", content: message });
+      chatHistory.push({ role: "assistant", content: data.reply });
 
-    // Speak response out loud using Web Speech Synthesis
-    speakText(data.speech_response);
+      // Render assistant message
+      renderAssistantChatMessage(data.reply, data.doctor_recommendation, data.parameters_cited);
+
+      // Text-To-Speech if enabled
+      const ttsCheckbox = document.getElementById("chat-tts-toggle");
+      if (ttsCheckbox && ttsCheckbox.checked) {
+        // Strip markdown and emojis for speech
+        const speechCleanText = data.reply
+          .replace(/\*\*/g, "")
+          .replace(/[•#>\-]/g, "")
+          .replace(/[\u{1F600}-\u{1F6FF}]/gu, "");
+        speakText(speechCleanText);
+      }
+    } else {
+      renderAssistantChatMessage("Sorry, I could not process your query at this moment. Please try again.");
+    }
   } catch (e) {
-    document.getElementById("voice-status-text").innerText = "Error getting voice response: " + e.message;
+    const loadingEl = document.getElementById("chat-msg-loading");
+    if (loadingEl) loadingEl.remove();
+    renderAssistantChatMessage(`Error communicating with RAG assistant: ${e.message}`);
+  } finally {
+    isChatSubmitting = false;
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+}
+
+function renderAssistantChatMessage(replyText, doctorRec, paramsCited) {
+  const msgBox = document.getElementById("chat-messages-box");
+  if (!msgBox) return;
+
+  const assistantRow = document.createElement("div");
+  assistantRow.className = "chat-msg-row assistant";
+
+  let doctorHtml = "";
+  if (doctorRec) {
+    const availableSlots = doctorRec.available_slots ? doctorRec.available_slots.slice(0, 3).join(", ") : "Flexible slots available";
+    doctorHtml = `
+      <div class="doc-booking-card-inline">
+        <div class="doc-meta">
+          <div class="doc-avatar">${doctorRec.avatar || "👨‍⚕️"}</div>
+          <div>
+            <div class="doc-name">${doctorRec.name}</div>
+            <div class="doc-spec">${doctorRec.specialty} • ${doctorRec.hospital}</div>
+            <div class="doc-slots">🕒 Available: ${availableSlots}</div>
+          </div>
+        </div>
+        <div style="margin-top: 0.65rem; text-align: right;">
+          <button class="btn btn-primary btn-sm" onclick="bookDoctorInline('${doctorRec.id}', '${doctorRec.name}', '${doctorRec.specialty}')">
+            📅 Book Appointment with ${doctorRec.name} →
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  assistantRow.innerHTML = `
+    <div class="chat-avatar">🩺</div>
+    <div class="chat-bubble">
+      ${formatChatMarkdown(replyText)}
+      ${doctorHtml}
+    </div>
+  `;
+
+  msgBox.appendChild(assistantRow);
+  msgBox.scrollTop = msgBox.scrollHeight;
+}
+
+function bookDoctorInline(doctorId, doctorName, specialty) {
+  // Switch to booking tab
+  switchPatientTab("book");
+
+  // Select doctor in the grid
+  const docCards = document.querySelectorAll(".doctor-card-select");
+  doctorsList.forEach((d, idx) => {
+    if (d.id === doctorId && docCards[idx]) {
+      selectDoctor(d.id, docCards[idx]);
+    }
+  });
+
+  // Pre-fill fields if report is available
+  if (currentReport) {
+    const tokenInput = document.getElementById("appt-report-token");
+    const nameInput = document.getElementById("appt-patient-name");
+    const reasonInput = document.getElementById("appt-reason");
+    if (tokenInput) tokenInput.value = currentReport.token;
+    if (nameInput) nameInput.value = currentReport.patient_name || "";
+    if (reasonInput) reasonInput.value = `Consultation for laboratory review (${specialty})`;
+  }
+
+  // Scroll to booking form smoothly
+  const bookTab = document.getElementById("patient-tab-book");
+  if (bookTab) {
+    bookTab.scrollIntoView({ behavior: "smooth" });
   }
 }
 
@@ -802,12 +990,6 @@ function speakText(text) {
   utterance.pitch = 1.0;
   utterance.lang = "en-US";
   window.speechSynthesis.speak(utterance);
-}
-
-function speakLastResponse() {
-  if (lastVoiceTextResponse) {
-    speakText(lastVoiceTextResponse);
-  }
 }
 
 // ==========================================

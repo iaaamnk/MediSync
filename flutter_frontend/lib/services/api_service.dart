@@ -151,5 +151,29 @@ class ApiService {
     }
     return null;
   }
+
+  static Future<Map<String, dynamic>?> sendChatMessage({
+    required String message,
+    String? reportId,
+    List<Map<String, String>> history = const [],
+  }) async {
+    try {
+      final res = await http.post(
+        Uri.parse("$baseUrl/api/chat"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "message": message,
+          "report_id": reportId,
+          "history": history,
+        }),
+      );
+      if (res.statusCode == 200) {
+        return json.decode(res.body);
+      }
+    } catch (e) {
+      print("Error in chat: $e");
+    }
+    return null;
+  }
 }
 

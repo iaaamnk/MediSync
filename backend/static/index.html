@@ -66,7 +66,7 @@
           <span>📋</span> My Appointments
         </button>
         <button class="tab-link" onclick="switchPatientTab('voice')">
-          <span>🎙️</span> Voice Assistant
+          <span>💬</span> RAG Chatbot & Voice
         </button>
       </div>
 
@@ -383,50 +383,69 @@
         </div>
       </section>
 
-      <!-- TAB 4: VOICE PIPELINE -->
+      <!-- TAB 4: RAG CLINICAL & APPOINTMENT CHATBOT -->
       <section id="patient-tab-voice" style="display: none;">
-        <div class="voice-assistant-box" style="max-width: 750px; margin: 0 auto;">
-          <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.5rem;">
-            🎙️ MediSync Voice Assistant
-          </h2>
-          <p style="font-size: 0.9rem; color: var(--gray-600); max-width: 520px; margin: 0 auto;">
-            Speak naturally to inquire about lab metrics, medical terms, or report values. Our voice pipeline answers concisely and reads the explanation aloud.
-          </p>
-
-          <!-- Voice Mic Trigger Button -->
-          <button class="mic-button" id="mic-btn" onclick="toggleVoiceRecording()" title="Click to speak">
-            🎤
-          </button>
-          <div class="voice-status" id="voice-status-text">Click the microphone and speak your question</div>
-
-          <!-- Suggested Chips -->
-          <div class="samples-bar" style="justify-content: center; margin: 1.25rem 0;">
-            <button class="chip-btn" onclick="askPresetVoice('What does Hemoglobin measure?')">"What is Hemoglobin?"</button>
-            <button class="chip-btn" onclick="askPresetVoice('Why is fasting glucose important in blood tests?')">"Fasting Glucose"</button>
-            <button class="chip-btn" onclick="askPresetVoice('What questions should I ask my doctor about cholesterol?')">"Cholesterol Questions"</button>
+        <div class="chat-card">
+          <!-- Chat Header -->
+          <div class="chat-header">
+            <div class="chat-header-title">
+              <span style="font-size: 1.4rem;">🤖</span>
+              <div>
+                <h3>MediSync RAG Assistant</h3>
+                <span style="font-size: 0.78rem; color: var(--gray-500);">Evidence-based Lab Explanations & Doctor Appointments</span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="active-report-badge" id="chat-active-report-badge">
+                📄 No report loaded
+              </span>
+              <label style="font-size: 0.8rem; color: var(--gray-600); display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                <input type="checkbox" id="chat-tts-toggle" checked>
+                <span>🔊 Voice Out</span>
+              </label>
+            </div>
           </div>
 
-          <!-- Text Fallback Input -->
-          <div style="display: flex; gap: 0.5rem; max-width: 550px; margin: 1rem auto 0;">
-            <input type="text" class="form-input" id="voice-text-input" placeholder="Or type your medical question here..." onkeypress="if(event.key==='Enter') submitTextVoiceQuery()">
-            <button class="btn btn-primary" onclick="submitTextVoiceQuery()">Ask</button>
+          <!-- Chat Conversation Window -->
+          <div class="chat-messages-box" id="chat-messages-box">
+            <!-- Initial Welcome Assistant Message -->
+            <div class="chat-msg-row assistant">
+              <div class="chat-avatar">🩺</div>
+              <div class="chat-bubble">
+                <p>Hello! I am your <strong>MediSync RAG Clinical & Appointment Assistant</strong>.</p>
+                <p style="margin-top: 0.4rem;">I can help you with:</p>
+                <ul>
+                  <li><strong>Your Lab Levels</strong>: Ask about your test values (e.g. <em>"Why is my creatinine high?"</em>, <em>"Explain my hemoglobin"</em>, <em>"Are my liver enzymes normal?"</em>).</li>
+                  <li><strong>Appointments</strong>: Ask <em>"Which doctor should I see for my report?"</em> or <em>"How do I book a consultation with Dr. Jenkins?"</em>.</li>
+                </ul>
+                <blockquote>
+                  ⚠️ <strong>Medical Guardrail</strong>: I provide educational explanations grounded in standard clinical references. I do not diagnose illnesses. Always consult your attending physician.
+                </blockquote>
+              </div>
+            </div>
           </div>
 
-          <!-- Voice Output Bubble -->
-          <div id="voice-response-container" style="display: none; max-width: 600px; margin: 1.5rem auto 0;">
-            <div class="voice-transcript">
-              <strong style="color: var(--gray-500); font-size: 0.8rem; text-transform: uppercase;">You Asked:</strong>
-              <p id="voice-user-transcript" style="font-weight: 600; margin-top: 0.2rem;"></p>
-            </div>
-            <div class="voice-response-bubble">
-              <h4>
-                <span>MediSync Audio Response</span>
-                <button class="btn btn-outline btn-sm" onclick="speakLastResponse()" style="padding: 2px 8px; font-size: 0.75rem;">
-                  🔊 Replay
-                </button>
-              </h4>
-              <p id="voice-ai-answer" style="font-size: 0.92rem; color: var(--gray-800); line-height: 1.5;"></p>
-            </div>
+          <!-- Quick Action Prompt Chips -->
+          <div class="chat-chips-bar">
+            <button class="chip-btn" onclick="sendChatPrompt('Explain my out-of-range laboratory levels')">🩸 Out-of-Range Levels</button>
+            <button class="chip-btn" onclick="sendChatPrompt('Which doctor should I book an appointment with for my report?')">🩺 Which Doctor Should I See?</button>
+            <button class="chip-btn" onclick="sendChatPrompt('What does my Hemoglobin level indicate?')">🩸 Hemoglobin</button>
+            <button class="chip-btn" onclick="sendChatPrompt('What does my TSH level mean?')">🦋 TSH</button>
+            <button class="chip-btn" onclick="sendChatPrompt('Explain my liver enzymes (ALT / AST)')">🫀 Liver Enzymes</button>
+            <button class="chip-btn" onclick="sendChatPrompt('What does my serum creatinine level mean?')">🧪 Creatinine</button>
+            <button class="chip-btn" onclick="sendChatPrompt('How do I schedule an appointment with a specialist?')">📅 How to Book</button>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <div class="chat-input-bar">
+            <!-- Voice Input Button -->
+            <button class="chat-mic-btn" id="mic-btn" onclick="toggleVoiceRecording()" title="Click to speak your question">
+              🎤
+            </button>
+            <input type="text" class="form-input" id="chat-text-input" placeholder="Ask about your lab levels or which doctor to book..." onkeypress="if(event.key==='Enter') submitChatMessage()">
+            <button class="btn btn-primary" onclick="submitChatMessage()" id="chat-send-btn" style="padding: 0.65rem 1.25rem;">
+              Send
+            </button>
           </div>
         </div>
       </section>

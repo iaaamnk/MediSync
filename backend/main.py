@@ -16,6 +16,7 @@ from backend.parameter_parser import parameter_parser
 from backend.rag_engine import rag_engine
 from backend.medgemma_connector import medgemma_connector
 from backend.voice_pipeline import voice_pipeline
+from backend.rag_chatbot import rag_chatbot
 from backend.security import inspect_request_for_bots, verify_honeypot
 
 app = FastAPI(
@@ -89,7 +90,32 @@ class VoiceQueryRequest(BaseModel):
     report_id: Optional[str] = None
     bot_trap: Optional[str] = None  # Anti-Bot Honeypot
 
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    report_id: Optional[str] = None
+    history: Optional[List[ChatMessage]] = None
+    bot_trap: Optional[str] = None  # Anti-Bot Honeypot
+
 # Endpoints
+
+@app.post("/api/chat")
+async def chat_with_rag(req: ChatRequest):
+    """
+    RAG-grounded conversational agent that answers inquiries regarding
+    observed patient laboratory levels and hospital doctor appointment scheduling.
+    """
+    verify_honeypot(req.bot_trap)
+    history_dicts = [{"role": h.role, "content": h.content} for h in req.history] if req.history else []
+    result = await rag_chatbot.answer_chat(
+        user_message=req.message,
+        report_id=req.report_id,
+        chat_history=history_dicts
+    )
+    return result
 
 @app.get("/api/knowledge-base")
 async def get_medical_knowledge_base():
