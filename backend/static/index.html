@@ -56,6 +56,9 @@
         <button class="tab-link active" onclick="switchPatientTab('analyze')">
           <span>📄</span> Upload & Analyze Report
         </button>
+        <button class="tab-link" onclick="switchPatientTab('kb')">
+          <span>📚</span> Medical Knowledge Base
+        </button>
         <button class="tab-link" onclick="switchPatientTab('book')">
           <span>📅</span> Book Appointment
         </button>
@@ -104,10 +107,11 @@
 
               <!-- Quick Samples Loader -->
               <div class="samples-bar">
-                <span class="samples-label">Quick test with samples:</span>
-                <button class="chip-btn" onclick="loadSampleReport('cbc')">🩸 Complete Blood Count (CBC)</button>
-                <button class="chip-btn" onclick="loadSampleReport('lipid')">🫀 Lipid & Cholesterol</button>
-                <button class="chip-btn" onclick="loadSampleReport('metabolic')">🧪 Metabolic & Glucose</button>
+                <span class="samples-label">Verified Clinical Samples:</span>
+                <button class="chip-btn" onclick="loadSampleReport('cbc')">🩸 CBC Panel</button>
+                <button class="chip-btn" onclick="loadSampleReport('thyroid')">🦋 Thyroid (TSH/FT4)</button>
+                <button class="chip-btn" onclick="loadSampleReport('liver')">🫀 Liver Panel (LFT)</button>
+                <button class="chip-btn" onclick="loadSampleReport('kidney')">🧪 Kidney (eGFR/Creatinine)</button>
               </div>
 
               <!-- Loader State -->
@@ -171,7 +175,10 @@
               <div class="card" style="margin-bottom: 1.5rem;">
                 <div class="card-header">
                   <div>
-                    <h3 class="card-title" id="report-title-display">Laboratory Health Report</h3>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                      <h3 class="card-title" id="report-title-display">Laboratory Health Report</h3>
+                      <span class="badge badge-normal" id="ai-engine-badge" style="font-size: 0.72rem;">MedGemma RAG</span>
+                    </div>
                     <span style="font-size: 0.8rem; color: var(--gray-500);" id="report-meta-display">Specimen evaluated</span>
                   </div>
                   <button class="btn btn-outline btn-sm" onclick="switchPatientTab('voice')">
@@ -219,6 +226,22 @@
                 </div>
               </div>
 
+              <!-- Reference Range Limitations & Authoritative Sources (RAG Grounding) -->
+              <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                  <h4 class="card-title" style="font-size: 0.95rem;">
+                    <span>📖</span> Clinical Reference Range Nuances & Limitations
+                  </h4>
+                </div>
+                <ul class="check-list" id="reference-limitations-list">
+                  <!-- Populated from RAG Engine -->
+                </ul>
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--gray-200); font-size: 0.8rem; color: var(--gray-500);">
+                  <strong>Verified Clinical Sources Cited:</strong>
+                  <div id="sources-cited-badges" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.35rem;"></div>
+                </div>
+              </div>
+
               <!-- Action to book appointment with report linked -->
               <div style="text-align: right;">
                 <button class="btn btn-primary" onclick="proceedToBookingWithCurrentReport()">
@@ -226,6 +249,49 @@
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: MEDICAL KNOWLEDGE BASE -->
+      <section id="patient-tab-kb" style="display: none;">
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title"><span>📚</span> Clinical Laboratory Knowledge Base & Interpretation Guide</h2>
+              <span style="font-size: 0.82rem; color: var(--gray-500);">Evidence-based reference definitions for CBC, Thyroid, Liver, and Kidney tests</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="loadMedicalKnowledgeBase()">🔄 Refresh</button>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--gray-700); line-height: 1.6;">
+            Laboratory tests measure specific biological markers to assess organ function and cellular equilibrium. 
+            All values in MediSync are grounded in standard clinical references from the <strong>Association for Diagnostics & Laboratory Medicine (ADLM)</strong>, 
+            <strong>NIH MedlinePlus</strong>, and <strong>World Health Organization (WHO)</strong> guidelines.
+          </p>
+        </div>
+
+        <!-- 4 Major Clinical Panels Overview Cards -->
+        <div class="grid-2" style="margin-bottom: 1.5rem;" id="kb-panels-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Reference Range Limitations Principles Guide -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <h3 class="card-title"><span>⚖️</span> Core Principles of Interpreting Reference Ranges & Their Limitations</h3>
+          </div>
+          <div class="grid-2" id="kb-principles-grid" style="gap: 1rem;">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Authoritative Medical References -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span>🏛️</span> Reliable Medical Reference Materials</h3>
+          </div>
+          <div id="kb-references-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Populated by JS -->
           </div>
         </div>
       </section>

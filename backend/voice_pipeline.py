@@ -2,16 +2,17 @@ import os
 import json
 import httpx
 from typing import Dict, Any, Optional
+from backend.rag_engine import rag_engine
 
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 VOICE_SYSTEM_PROMPT = """
-You are MediSync Voice Assistant, a gentle, informative medical guide.
+You are MediSync Voice Assistant, an evidence-based clinical laboratory guide.
 CRITICAL MEDICAL SAFETY:
-- You must NOT diagnose diseases or conclude medical conditions.
-- You answer questions about medical terms, lab report values, appointment preparation, and health education.
-- Keep your answers concise, warm, easy to listen to when read aloud (2 to 4 sentences).
-- If asked "Do I have cancer/diabetes/etc?", clarify that laboratory markers only indicate levels, not diseases, and advise checking with their doctor.
+- You must NOT diagnose diseases, label conditions, or declare medical verdicts.
+- Use the retrieved medical knowledge context to answer questions about lab terms, reference intervals, biological variations (hydration, exercise, fasting), and appointment preparation.
+- Keep answers warm, concise, and optimized for spoken delivery (2 to 4 sentences).
+- Always recommend discussing findings with the attending physician.
 """
 
 class VoicePipeline:
@@ -23,32 +24,35 @@ class VoicePipeline:
 
     async def process_voice_query(self, query_text: str, report_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Processes voice query text and returns intelligent, spoken-friendly answer.
+        Processes voice query text using RAG retrieval + AI synthesis.
         """
+        # 1. Retrieve supporting context from knowledge base
+        rag_chunks = rag_engine.search_knowledge(query_text, top_k=2)
+        rag_context_str = "\n".join([f"KB Resource ({c.get('title')}): {c.get('content')}" for c in rag_chunks])
+
+        # 2. Add current report context if available
         context_str = ""
         if report_context:
             title = report_context.get("report_title", "Medical Report")
-            params = [f"{p['name']}: {p['value']} ({p['status']})" for p in report_context.get("parameters", [])[:6]]
-            context_str = f"\nRelevant Patient Report: {title}\nKey parameters: {', '.join(params)}"
+            params = [f"{p.get('name')}: {p.get('value')} ({p.get('status')})" for p in report_context.get("parameters", [])[:6]]
+            context_str = f"\nPatient Active Lab Data: {title}\nKey observed parameters: {', '.join(params)}"
 
+        full_prompt = (
+            f"User Voice Question: '{query_text}'\n"
+            f"{context_str}\n"
+            f"Verified Medical Knowledge Base Reference:\n{rag_context_str}\n\n"
+            f"Provide a gentle, 2-3 sentence spoken explanation. Never diagnose any illness."
+        )
+
+        # 3. Model call if API key present
         if self.api_key:
             try:
                 payload = {
-                    "system_instruction": {
-                        "parts": [{"text": VOICE_SYSTEM_PROMPT}]
-                    },
-                    "contents": [
-                        {
-                            "role": "user",
-                            "parts": [{"text": f"Patient/Doctor voice query: '{query_text}'{context_str}\nProvide a helpful, spoken explanation without diagnosing any disease."}]
-                        }
-                    ],
-                    "generationConfig": {
-                        "temperature": 0.3,
-                        "maxOutputTokens": 250
-                    }
+                    "system_instruction": {"parts": [{"text": VOICE_SYSTEM_PROMPT}]},
+                    "contents": [{"role": "user", "parts": [{"text": full_prompt}]}],
+                    "generationConfig": {"temperature": 0.25, "maxOutputTokens": 220}
                 }
-                async with httpx.AsyncClient(timeout=20.0) as client:
+                async with httpx.AsyncClient(timeout=15.0) as client:
                     resp = await client.post(
                         f"{GEMINI_API_URL}?key={self.api_key}",
                         json=payload,
@@ -57,35 +61,32 @@ class VoicePipeline:
                     if resp.status_code == 200:
                         candidates = resp.json().get("candidates", [])
                         if candidates:
-                            answer = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                            answer = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
                             return {
                                 "transcript": query_text,
-                                "speech_response": answer.strip(),
-                                "source": "Gemini-2.5-Flash"
+                                "speech_response": answer,
+                                "source": "Gemini-RAG Voice Pipeline"
                             }
             except Exception as e:
-                print(f"Voice Gemini API error: {e}")
+                print(f"Voice API error: {e}")
 
-        # Intelligent fallback voice assistant
+        # 4. Deterministic RAG Fallback using retrieved medical knowledge chunks
         lower_q = query_text.lower()
-        if "hemoglobin" in lower_q:
-            resp = "Hemoglobin is the protein in your red blood cells carrying oxygen. Levels can fluctuate based on hydration, altitude, and diet. It does not diagnose any illness on its own, so do share this with your doctor."
-        elif "wbc" in lower_q or "white blood" in lower_q:
-            resp = "White blood cells defend your body against bacteria and viruses. A mild elevation can happen naturally during stress or routine recovery. Your doctor can review this in full context."
-        elif "glucose" in lower_q or "sugar" in lower_q:
-            resp = "Blood glucose measures current circulating sugar. Fasting status significantly influences these readings. Be sure to inform your doctor if you had fasted before the sample."
-        elif "cholesterol" in lower_q or "lipid" in lower_q:
-            resp = "Cholesterol is vital for your cells and hormones. Having higher or lower levels is a routine wellness marker to discuss regarding balanced nutrition and exercise."
+        if rag_chunks:
+            top_chunk = rag_chunks[0]
+            title = top_chunk.get("title", "")
+            content = top_chunk.get("content", "")
+            # Synthesize clean 2-sentence spoken output
+            resp = f"{title} is evaluated as part of routine laboratory health assessments. {content[:180]}... Remember that numbers reflect general physiology rather than a disease, so your physician will interpret them in context."
         elif "appointment" in lower_q or "doctor" in lower_q:
-            resp = "You can book an appointment with our specialists in Cardiology, Endocrinology, General Medicine, or Pulmonology using the Appointments tab right here."
+            resp = "You can schedule a consultation with our specialists in Cardiology, Endocrinology, General Medicine, or Pulmonology using the Book Appointment tab."
         else:
-            resp = f"Thank you for your question. Regarding '{query_text}', remember that laboratory numbers are general indicators rather than disease diagnoses. Please consult your physician for individualized medical advice."
+            resp = f"Regarding '{query_text}', laboratory parameters reflect normal physiological variations influenced by hydration, timing, and diet. Please consult your physician for individualized medical interpretation."
 
         return {
             "transcript": query_text,
             "speech_response": resp,
-            "source": "MediSync Voice Engine"
+            "source": "MediSync Clinical RAG Engine"
         }
 
 voice_pipeline = VoicePipeline()
-

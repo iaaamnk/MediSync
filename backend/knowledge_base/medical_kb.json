@@ -1,0 +1,341 @@
+{
+  "panels": {
+    "cbc": {
+      "name": "Complete Blood Count (CBC)",
+      "clinical_overview": "A Complete Blood Count evaluates cellular components of circulating blood: erythrocytes (oxygen transport), leukocytes (immune defense), and thrombocytes (hemostasis and clotting).",
+      "clinical_purpose": "Assesses general hematological health, screening for physiological imbalances such as diminished oxygen-carrying capacity, acute immune reactivity, or platelet-mediated clotting variations.",
+      "primary_indicators": ["Hemoglobin", "Hematocrit", "RBC Count", "WBC Count", "Platelets", "MCV", "MCH", "MCHC", "RDW", "Neutrophils", "Lymphocytes", "Monocytes", "Eosinophils", "Basophils"],
+      "reference_source": "Association for Diagnostics & Laboratory Medicine (ADLM) / WHO Hematology Diagnostic Criteria"
+    },
+    "thyroid": {
+      "name": "Thyroid Function Panel",
+      "clinical_overview": "Evaluates the neuroendocrine axis between the pituitary gland and the thyroid gland. Thyroid hormones regulate systemic basal metabolic rate, body temperature, cardiovascular dynamics, and energy balance.",
+      "clinical_purpose": "Assesses functional endocrine signaling via pituitary feedback (TSH) and active peripheral hormones (Free T4, Free T3).",
+      "primary_indicators": ["TSH", "Free T4", "Free T3", "Total T4", "Total T3", "TPO Antibodies"],
+      "reference_source": "American Thyroid Association (ATA) / Endocrine Society Clinical Guidelines"
+    },
+    "liver": {
+      "name": "Liver Function Tests (LFT / Hepatic Panel)",
+      "clinical_overview": "Comprehensive biochemical panel measuring circulating enzymes, proteins, and metabolic byproducts that reflect the synthetic, excretory, and cellular integrity of the hepatobiliary system.",
+      "clinical_purpose": "Identifies hepatocellular cellular membrane permeability, biliary duct patency, and hepatic synthetic capacity without definitively assigning chronic disease labels.",
+      "primary_indicators": ["ALT (SGPT)", "AST (SGOT)", "ALP (Alkaline Phosphatase)", "Total Bilirubin", "Direct Bilirubin", "Albumin", "Total Protein", "GGT"],
+      "reference_source": "American Association for the Study of Liver Diseases (AASLD) Clinical Laboratory Standards"
+    },
+    "kidney": {
+      "name": "Kidney Function Tests (KFT / Renal Panel)",
+      "clinical_overview": "Biochemical assessment of glomerular filtration, tubular reabsorption, and nitrogenous clearance performed by the nephrons of the kidneys.",
+      "clinical_purpose": "Monitors renal clearance rates, hydration status, fluid-electrolyte balance, and excretion of protein breakdown products.",
+      "primary_indicators": ["Serum Creatinine", "eGFR", "Blood Urea Nitrogen (BUN)", "BUN/Creatinine Ratio", "Uric Acid", "Sodium", "Potassium", "Chloride"],
+      "reference_source": "National Kidney Foundation (NKF) KDOQI Guidelines / KDIGO Laboratory Practice"
+    },
+    "metabolic_lipid": {
+      "name": "Metabolic & Lipid Panel",
+      "clinical_overview": "Evaluates glycemic regulation, insulin homeostasis, and circulating lipid fractions transported via lipoproteins.",
+      "clinical_purpose": "Provides cardiovascular and metabolic wellness profiling to support proactive nutrition, lifestyle, and exercise planning.",
+      "primary_indicators": ["Fasting Blood Glucose", "HbA1c", "Total Cholesterol", "HDL Cholesterol", "LDL Cholesterol", "Triglycerides", "VLDL"],
+      "reference_source": "American Diabetes Association (ADA) / American College of Cardiology (ACC)"
+    }
+  },
+  "parameters": {
+    "hemoglobin": {
+      "canonical_name": "Hemoglobin",
+      "aliases": ["hb", "hgb", "haemoglobin", "hemoglobin total"],
+      "panel": "cbc",
+      "unit": "g/dL",
+      "standard_reference_interval": "12.0 - 17.5 g/dL (varies by sex: Adult Female 12.0 - 15.5 g/dL; Adult Male 13.5 - 17.5 g/dL)",
+      "clinical_definition": "Iron-containing conjugated metalloprotein residing within erythrocytes that reversibly binds molecular oxygen in alveolar capillaries and delivers it to peripheral tissues.",
+      "elevation_interpretation": "Observed elevation can reflect adaptive erythrocytosis (e.g., altitude exposure, smoking), hemoconcentration due to mild dehydration, or intense recent exercise.",
+      "decrease_interpretation": "Observed reduction indicates diminished total circulating oxygen-carrying capacity. Mild fluctuations frequently relate to dietary iron/B12 variations, hydration shifts, or menstrual blood loss.",
+      "biological_limitations": "Levels fluctuate significantly based on acute hydration (dehydration artificially raises values, overhydration dilutes them). Diurnal variation causes slightly higher levels in morning.",
+      "doctor_discussion_points": "Ask whether repeat testing with a ferritin/iron panel is warranted, and whether nutritional adjustments or follow-up is recommended."
+    },
+    "hematocrit": {
+      "canonical_name": "Hematocrit",
+      "aliases": ["hct", "pcv", "packed cell volume"],
+      "panel": "cbc",
+      "unit": "%",
+      "standard_reference_interval": "36.0% - 50.0% (Female: 36 - 46%; Male: 40 - 50%)",
+      "clinical_definition": "The volumetric percentage of whole blood occupied by packed erythrocytes following centrifugation.",
+      "elevation_interpretation": "Often caused by relative plasma volume reduction (dehydration, perspiration, fluid loss) or adaptive red cell proliferation.",
+      "decrease_interpretation": "Reflects a lower proportion of red blood cells relative to plasma volume, commonly correlating with hemoglobin trends.",
+      "biological_limitations": "Extremely sensitive to plasma volume changes. Posture during phlebotomy (standing vs recumbent) can alter values by 4-8% due to fluid shifts.",
+      "doctor_discussion_points": "Discuss hydration status at the time of draw and whether red blood cell indices (MCV, MCH) should be interpreted together."
+    },
+    "rbc": {
+      "canonical_name": "RBC Count",
+      "aliases": ["rbc", "red blood cell count", "erythrocyte count", "total rbc"],
+      "panel": "cbc",
+      "unit": "mil/µL",
+      "standard_reference_interval": "4.0 - 5.9 mil/µL (Female: 4.0 - 5.2; Male: 4.5 - 5.9)",
+      "clinical_definition": "Total enumeration of circulating mature biconcave red blood cells per microliter of whole blood.",
+      "elevation_interpretation": "May reflect physiological hemoconcentration, chronic hypoxic adaptation, or bone marrow stimulation.",
+      "decrease_interpretation": "Indicates decreased red cell density, tracking alongside hemoglobin and hematocrit.",
+      "biological_limitations": "Pregnancy induces physiological hemodilution where RBC count decreases while plasma volume expands.",
+      "doctor_discussion_points": "Ask how RBC count compares to your baseline and historical lab records."
+    },
+    "wbc": {
+      "canonical_name": "WBC Count",
+      "aliases": ["wbc", "white blood cell count", "leukocyte count", "total wbc", "tc"],
+      "panel": "cbc",
+      "unit": "x10^3/µL",
+      "standard_reference_interval": "4.5 - 11.0 x10^3/µL",
+      "clinical_definition": "The total number of circulating nucleated immune cells comprising granulocytes, lymphocytes, and monocytes.",
+      "elevation_interpretation": "Mild to moderate elevation (leukocytosis) is a normal, healthy immune response to recent physical stress, exercise, minor viral/bacterial exposure, tissue healing, or inflammation.",
+      "decrease_interpretation": "A lower count (leukopenia) can follow transient viral recovery, nutritional deficiencies, or certain medication exposures.",
+      "biological_limitations": "Significant physiological spikes occur following acute emotional stress, vigorous exercise, or morning corticosteroid peaks.",
+      "doctor_discussion_points": "Inquire whether an infectious, inflammatory, or stress-related factor was present near the time of collection."
+    },
+    "platelets": {
+      "canonical_name": "Platelets",
+      "aliases": ["plt", "platelet count", "thrombocyte count"],
+      "panel": "cbc",
+      "unit": "x10^3/µL",
+      "standard_reference_interval": "150 - 450 x10^3/µL",
+      "clinical_definition": "Anucleated cellular fragments derived from bone marrow megakaryocytes essential for primary hemostasis and vascular endothelial repair.",
+      "elevation_interpretation": "Reactive thrombocytosis frequently occurs as an acute-phase reactant during routine bodily recovery, iron deficiency, or minor tissue inflammation.",
+      "decrease_interpretation": "Mild decreases can stem from platelet aggregation in the collection tube (pseudothrombocytopenia), viral infections, or splenic sequestration.",
+      "biological_limitations": "In vitro clumping caused by EDTA anticoagulant in collection tubes is a common pre-analytical artifact that produces artificially low readings.",
+      "doctor_discussion_points": "Ask if a manual peripheral blood smear check or collection in a citrate tube is needed if platelets appear lower than expected."
+    },
+    "mcv": {
+      "canonical_name": "MCV (Mean Corpuscular Volume)",
+      "aliases": ["mcv", "mean corpuscular volume"],
+      "panel": "cbc",
+      "unit": "fL",
+      "standard_reference_interval": "80.0 - 100.0 fL",
+      "clinical_definition": "The average physical volume or size of individual red blood cells in femtoliters.",
+      "elevation_interpretation": "Macrocytosis (larger cells) can be influenced by elevated reticulocyte production, vitamin B12/folate dynamics, thyroid state, or alcohol consumption.",
+      "decrease_interpretation": "Microcytosis (smaller cells) often correlates with variations in iron availability, globin chain synthesis, or chronic inflammation.",
+      "biological_limitations": "Sample age: red blood cells stored in EDTA for prolonged intervals prior to processing swell, artificially increasing MCV.",
+      "doctor_discussion_points": "Ask how MCV correlates with dietary iron, B12 status, and family history."
+    },
+    "tsh": {
+      "canonical_name": "TSH (Thyroid Stimulating Hormone)",
+      "aliases": ["tsh", "thyrotropin", "thyroid stimulating hormone", "s-tsh"],
+      "panel": "thyroid",
+      "unit": "µIU/mL",
+      "standard_reference_interval": "0.40 - 4.50 µIU/mL (institutional norms range from 0.35 to 4.20)",
+      "clinical_definition": "Anterior pituitary glycoprotein hormone regulating follicular biosynthesis and secretion of thyroid hormones (T4 and T3) via negative feedback.",
+      "elevation_interpretation": "Mild elevations indicate that the pituitary is prompting the thyroid gland more actively. Can occur transiently post-viral infection, with advancing age, or in subclinical states.",
+      "decrease_interpretation": "Suppressed or low values indicate reduced pituitary stimulation, potentially reflecting exogenous thyroid medication, acute systemic illness, or increased thyroid hormone release.",
+      "biological_limitations": "TSH exhibits strong circadian rhythmicity (peaking during night/early morning and troughing in afternoon) and pulsatile secretion. Acute non-thyroidal illness also temporarily shifts levels.",
+      "doctor_discussion_points": "Ask if Free T4 and Free T3 should be evaluated to interpret the complete pituitary-thyroid feedback loop."
+    },
+    "free_t4": {
+      "canonical_name": "Free T4 (Free Thyroxine)",
+      "aliases": ["free t4", "ft4", "thyroxine free", "free thyroxine"],
+      "panel": "thyroid",
+      "unit": "ng/dL",
+      "standard_reference_interval": "0.8 - 1.8 ng/dL",
+      "clinical_definition": "The biologically active, unbound fraction of thyroxine circulating in serum, independent of carrier proteins (thyroid-binding globulin).",
+      "elevation_interpretation": "Suggests elevated circulating active thyroxine, prompting discussion regarding thyroid metabolic activity.",
+      "decrease_interpretation": "Suggests lower peripheral thyroxine supply, to be correlated directly alongside TSH values.",
+      "biological_limitations": "High-dose biotin supplements can cause severe analytical interference in immunoassays, creating falsely high or low FT4 and TSH readings.",
+      "doctor_discussion_points": "Mention any nutritional supplements (especially biotin) taken within 48 hours of blood collection."
+    },
+    "alt": {
+      "canonical_name": "ALT (Alanine Aminotransferase)",
+      "aliases": ["alt", "sgpt", "alanine transaminase", "alanine aminotransferase"],
+      "panel": "liver",
+      "unit": "U/L",
+      "standard_reference_interval": "7 - 56 U/L (Male: ~10 - 45 U/L; Female: ~7 - 35 U/L)",
+      "clinical_definition": "Cytosolic intracellular enzyme concentrated predominantly within hepatocytes that catalyzes amino acid transamination.",
+      "elevation_interpretation": "Mild enzyme leaks into serum reflect transient hepatocyte stress, commonly triggered by strenuous physical workouts, recent alcohol consumption, fatty dietary changes, or routine medications (acetaminophen, statins).",
+      "decrease_interpretation": "Low values are normal and have no pathological significance.",
+      "biological_limitations": "Intense resistance exercise or muscle damage causes transient elevations. Diurnal variations and recent meal composition also influence serum levels.",
+      "doctor_discussion_points": "Review any recent over-the-counter medications, dietary supplements, or heavy muscular workouts prior to the test."
+    },
+    "ast": {
+      "canonical_name": "AST (Aspartate Aminotransferase)",
+      "aliases": ["ast", "sgot", "aspartate transaminase", "aspartate aminotransferase"],
+      "panel": "liver",
+      "unit": "U/L",
+      "standard_reference_interval": "10 - 40 U/L",
+      "clinical_definition": "Mitochondrial and cytosolic enzyme present in hepatocytes, cardiac myocytes, skeletal muscle fibers, and red blood cells.",
+      "elevation_interpretation": "Because AST is distributed across muscle as well as liver, isolated elevations frequently reflect muscular exertion or strenuous fitness training rather than hepatic factors.",
+      "decrease_interpretation": "Low values are physiologically benign and standard.",
+      "biological_limitations": "Hemolyzed blood specimens (red blood cells rupturing during draw) release intracellular AST, creating falsely elevated readings.",
+      "doctor_discussion_points": "Discuss the AST to ALT ratio with your physician and note any recent strenuous exercise or muscle soreness."
+    },
+    "alp": {
+      "canonical_name": "ALP (Alkaline Phosphatase)",
+      "aliases": ["alp", "alkaline phosphatase", "alk phos"],
+      "panel": "liver",
+      "unit": "U/L",
+      "standard_reference_interval": "44 - 147 U/L",
+      "clinical_definition": "Hydrolase enzyme concentrated within hepatobiliary canalicular membranes, osteoblasts (bone-forming cells), and the placenta.",
+      "elevation_interpretation": "Elevations can reflect biliary canalicular activity, active bone remodeling, pregnancy, or normal adolescent growth spurts.",
+      "decrease_interpretation": "Infrequently observed, occasionally associated with specific mineral micronutrient dynamics (zinc, magnesium).",
+      "biological_limitations": "Non-fasting blood draws can increase ALP by up to 25% due to intestinal alkaline phosphatase isoenzyme release.",
+      "doctor_discussion_points": "Ask whether GGT (gamma-glutamyl transferase) was measured to differentiate whether ALP is of bone or biliary origin."
+    },
+    "bilirubin": {
+      "canonical_name": "Total Bilirubin",
+      "aliases": ["bilirubin", "total bilirubin", "t. bili", "tbil"],
+      "panel": "liver",
+      "unit": "mg/dL",
+      "standard_reference_interval": "0.2 - 1.2 mg/dL",
+      "clinical_definition": "Tetrapyrrole catabolic breakdown byproduct of heme from senescent erythrocytes, conjugated by hepatocytes and excreted in bile.",
+      "elevation_interpretation": "Mild isolated unconjugated elevation is common in benign constitutional variations (e.g., Gilbert's syndrome during fasting or dehydration) or enhanced red cell turnover.",
+      "decrease_interpretation": "Low levels are considered entirely normal and clinically favorable.",
+      "biological_limitations": "Prolonged fasting or severe caloric restriction can temporarily double bilirubin values without liver pathology. Light exposure degrades bilirubin in sample tubes.",
+      "doctor_discussion_points": "Ask if direct (conjugated) and indirect (unconjugated) fractions were separated to determine the source of elevation."
+    },
+    "creatinine": {
+      "canonical_name": "Serum Creatinine",
+      "aliases": ["creatinine", "serum creatinine", "s. creat", "creat"],
+      "panel": "kidney",
+      "unit": "mg/dL",
+      "standard_reference_interval": "0.60 - 1.20 mg/dL (Female: 0.5 - 1.1; Male: 0.7 - 1.3)",
+      "clinical_definition": "Non-protein nitrogenous waste product produced at a relatively constant rate by spontaneous non-enzymatic breakdown of muscle creatine phosphate, excreted by glomerular filtration.",
+      "elevation_interpretation": "Reflects reduced glomerular clearance or increased muscular mass/protein intake. Mild elevation frequently arises from temporary dehydration, heavy cooked meat ingestion, or intense weight training.",
+      "decrease_interpretation": "Commonly seen in individuals with lower muscle mass, vegetarian/vegan diets, or advanced age; physiologically non-threatening.",
+      "biological_limitations": "Creatinine generation is directly proportional to lean muscle mass. A muscular athlete naturally exhibits higher baseline creatinine than a sedentary individual with identical kidney function.",
+      "doctor_discussion_points": "Clarify your hydration status and muscle mass profile when evaluating this metric alongside eGFR."
+    },
+    "egfr": {
+      "canonical_name": "eGFR (estimated Glomerular Filtration Rate)",
+      "aliases": ["egfr", "estimated gfr", "gfr"],
+      "panel": "kidney",
+      "unit": "mL/min/1.73m²",
+      "standard_reference_interval": "≥ 90 mL/min/1.73m² (60 - 89 considered mild age-related reduction if asymptomatic)",
+      "clinical_definition": "Mathematically estimated volumetric rate at which plasma is filtered through glomerular capillaries per minute, adjusted for body surface area.",
+      "elevation_interpretation": "High values indicate robust glomerular filtration, common in young adults and hyperfiltration states.",
+      "decrease_interpretation": "Lower values suggest reduced filtration efficiency. Minor drops into the 60-80 range are standard as a normal part of natural biological aging.",
+      "biological_limitations": "eGFR formulas (CKD-EPI 2021) assume steady-state serum creatinine. Acute fluid changes, creatine monohydrate supplementation, or extreme body types skew calculations.",
+      "doctor_discussion_points": "Ask whether cystatin-C testing or urine albumin-to-creatinine ratio (uACR) is recommended for a more comprehensive assessment."
+    },
+    "bun": {
+      "canonical_name": "Blood Urea Nitrogen (BUN)",
+      "aliases": ["bun", "urea nitrogen", "serum urea", "blood urea"],
+      "panel": "kidney",
+      "unit": "mg/dL",
+      "standard_reference_interval": "7.0 - 20.0 mg/dL",
+      "clinical_definition": "Amount of nitrogen circulating in the form of urea, the chief end product of dietary and endogenous protein catabolism synthesized by the liver and cleared by the kidneys.",
+      "elevation_interpretation": "Frequently driven by prerenal factors: mild dehydration, high dietary protein intake, or prolonged intense training.",
+      "decrease_interpretation": "Observed in low-protein diets, high fluid consumption (overhydration), or normal third-trimester pregnancy.",
+      "biological_limitations": "Significantly influenced by dietary protein and fluid intake; less specific for renal filtering capacity than creatinine alone.",
+      "doctor_discussion_points": "Review the BUN/Creatinine ratio to assess whether hydration is the primary factor driving the reading."
+    },
+    "glucose": {
+      "canonical_name": "Fasting Blood Glucose",
+      "aliases": ["glucose", "fasting glucose", "blood sugar", "fbs", "fasting blood sugar"],
+      "panel": "metabolic_lipid",
+      "unit": "mg/dL",
+      "standard_reference_interval": "70 - 99 mg/dL (100 - 125 indicates impaired fasting baseline)",
+      "clinical_definition": "Monosaccharide sugar circulating in blood plasma, serving as primary cellular metabolic fuel regulated by pancreatic insulin and glucagon.",
+      "elevation_interpretation": "Higher levels can occur following incomplete fasting, psychological stress (cortisol-mediated glycogenolysis), sleep deprivation, or acute illness.",
+      "decrease_interpretation": "May reflect prolonged fasting, intensive endurance exertion, or timing of meals.",
+      "biological_limitations": "Strict 8 to 12-hour water-only fasting is required. Drinking juice, coffee with milk, or chewing sugary gum immediately before phlebotomy invalidates fasting status.",
+      "doctor_discussion_points": "Confirm how many hours of fasting preceded the blood draw, and discuss whether an HbA1c test is recommended."
+    },
+    "hba1c": {
+      "canonical_name": "HbA1c (Glycated Hemoglobin)",
+      "aliases": ["hba1c", "a1c", "glycated hemoglobin", "glycosylated hemoglobin"],
+      "panel": "metabolic_lipid",
+      "unit": "%",
+      "standard_reference_interval": "< 5.7% (5.7% - 6.4% indicates borderline or increased metabolic monitoring zone)",
+      "clinical_definition": "Percentage of circulating hemoglobin A chemically bound to glucose via non-enzymatic ketoamine condensation, reflecting glycemic exposure over the red cell lifespan (~90-120 days).",
+      "elevation_interpretation": "Suggests sustained higher average circulating glucose levels over recent weeks to months, prompting lifestyle discussions.",
+      "decrease_interpretation": "Can occur in states of accelerated red blood cell turnover (e.g., hemolytic conditions, acute blood loss, recent transfusions).",
+      "biological_limitations": "Any condition that alters red blood cell lifespan (hemolytic anemia, hemoglobin variants like sickle trait, severe iron deficiency) causes inaccurate HbA1c readings.",
+      "doctor_discussion_points": "Inquire how your HbA1c aligns with your daily dietary habits, physical activity, and fasting glucose."
+    },
+    "cholesterol_total": {
+      "canonical_name": "Total Cholesterol",
+      "aliases": ["cholesterol", "total cholesterol", "chol"],
+      "panel": "metabolic_lipid",
+      "unit": "mg/dL",
+      "standard_reference_interval": "125 - 200 mg/dL",
+      "clinical_definition": "Sum of all circulating steroid sterol lipids across HDL, LDL, and VLDL lipoprotein particles.",
+      "elevation_interpretation": "Higher total cholesterol should be contextualized by looking at HDL (protective) vs LDL/triglycerides before drawing conclusions.",
+      "decrease_interpretation": "Very low total cholesterol is occasionally seen in severe malnutrition, hyperthyroidism, or acute systemic stress.",
+      "biological_limitations": "Acute illnesses, recent myocardial events, or major surgeries transiently lower lipid levels for 6-8 weeks.",
+      "doctor_discussion_points": "Review the full lipid subfractions (HDL, LDL, non-HDL) rather than looking at Total Cholesterol in isolation."
+    },
+    "ldl": {
+      "canonical_name": "LDL Cholesterol",
+      "aliases": ["ldl", "ldl cholesterol", "low density lipoprotein", "ldl-c"],
+      "panel": "metabolic_lipid",
+      "unit": "mg/dL",
+      "standard_reference_interval": "< 100 mg/dL (Optimal: < 100; Near optimal: 100 - 129)",
+      "clinical_definition": "Atherogenic lipoprotein particle delivering hepatic cholesterol to peripheral tissues; primary target in cardiovascular risk assessment.",
+      "elevation_interpretation": "Higher concentrations are discussed in preventive cardiology regarding dietary saturated fat, cardiovascular risk factors, and physical conditioning.",
+      "decrease_interpretation": "Desirable in high cardiovascular risk profiles; low levels support vascular health.",
+      "biological_limitations": "Frequently calculated using the Friedewald equation (Total Chol - HDL - Trig/5); this calculation becomes unreliable if triglycerides exceed 400 mg/dL.",
+      "doctor_discussion_points": "Ask whether direct LDL measurement or ApoB testing is beneficial for your cardiovascular risk profile."
+    },
+    "hdl": {
+      "canonical_name": "HDL Cholesterol",
+      "aliases": ["hdl", "hdl cholesterol", "high density lipoprotein", "hdl-c"],
+      "panel": "metabolic_lipid",
+      "unit": "mg/dL",
+      "standard_reference_interval": "≥ 40 mg/dL in males; ≥ 50 mg/dL in females (Higher is generally favorable)",
+      "clinical_definition": "Anti-atherogenic dense lipoprotein that scavenges excess cholesterol from peripheral arterial walls and transports it to the liver for excretion (reverse cholesterol transport).",
+      "elevation_interpretation": "Generally considered cardio-protective and favorably stimulated by aerobic exercise and healthy unsaturated dietary fats.",
+      "decrease_interpretation": "Lower values warrant attention toward aerobic physical conditioning, smoking cessation, and metabolic wellness.",
+      "biological_limitations": "Excessive alcohol consumption can artificially elevate HDL without providing true cardiovascular protection.",
+      "doctor_discussion_points": "Discuss aerobic exercise routines and dietary strategies that support healthy HDL levels."
+    },
+    "triglycerides": {
+      "canonical_name": "Triglycerides",
+      "aliases": ["triglyceride", "triglycerides", "tg", "trigs"],
+      "panel": "metabolic_lipid",
+      "unit": "mg/dL",
+      "standard_reference_interval": "< 150 mg/dL (Borderline high: 150 - 199 mg/dL)",
+      "clinical_definition": "Glycerol molecules esterified with three fatty acids; the primary storage and transport form of dietary and adipose energy.",
+      "elevation_interpretation": "Highly sensitive to recent carbohydrate intake, sugary beverages, alcohol, and insufficient fasting time before blood draw.",
+      "decrease_interpretation": "Low levels are physiologically normal, often seen in active individuals with low-fat nutrition.",
+      "biological_limitations": "A non-fasting specimen or high-fat/high-sugar meal within 24 hours can temporarily double triglyceride levels.",
+      "doctor_discussion_points": "Verify fasting duration and discuss dietary adjustments regarding refined sugars and alcohol."
+    }
+  },
+  "reference_range_limitations_guide": {
+    "title": "Clinical Principles of Laboratory Reference Range Interpretation",
+    "core_principles": [
+      {
+        "principle": "The 95% Statistical Confidence Rule",
+        "explanation": "Reference ranges are established from healthy cohorts where the reference interval represents 2 standard deviations around the mean (the central 95%). Mathematically, 5% of completely healthy, asymptomatic individuals naturally test outside normal reference boundaries on any given routine panel."
+      },
+      {
+        "principle": "Inter-Laboratory & Assay Discrepancies",
+        "explanation": "Different diagnostic laboratories employ distinct automated immunoassay and spectrophotometric platforms (e.g., Roche, Abbott, Siemens, Beckman Coulter). Reagents and calibration baselines differ, meaning a value considered borderline at Lab A may fall comfortably within normal reference limits at Lab B."
+      },
+      {
+        "principle": "Pre-Analytical & Biological Fluctuation",
+        "explanation": "Up to 70% of unexpected lab anomalies arise from pre-analytical variables rather than organic disease: hydration state, posture during phlebotomy, prolonged tourniquet application, time elapsed before plasma centrifugation, sleep cycles, and recent intense muscular exercise."
+      },
+      {
+        "principle": "Isolated Out-of-Range Metrics Are Not Diagnoses",
+        "explanation": "A single lab marker is an isolated biomarker, never a medical diagnosis. A mildly elevated ALT, slight low hemoglobin, or borderline TSH must always be evaluated in conjunction with medical history, physical exam, and clinical trends over time."
+      },
+      {
+        "principle": "Biological vs Clinical Significance",
+        "explanation": "A number that is 0.1 above or below a printed reference cutoff is statistically outside the boundary but almost always clinically indistinguishable from normal. Attending physicians evaluate trends and clinical context rather than rigid cutoffs."
+      }
+    ],
+    "authoritative_references": [
+      {
+        "organization": "Association for Diagnostics & Laboratory Medicine (ADLM / formerly AACC)",
+        "resource": "Lab Tests Online & Clinical Laboratory Standards",
+        "url": "https://www.testing.com/"
+      },
+      {
+        "organization": "National Institutes of Health (NIH)",
+        "resource": "MedlinePlus Medical Encyclopedia - Laboratory Tests",
+        "url": "https://medlineplus.gov/encyclopedia.html"
+      },
+      {
+        "organization": "World Health Organization (WHO)",
+        "resource": "Model List of Essential In Vitro Diagnostics",
+        "url": "https://www.who.int/publications/i/item/9789240019102"
+      },
+      {
+        "organization": "Tietz Textbook of Clinical Chemistry and Molecular Diagnostics",
+        "resource": "Standard Clinical Laboratory Reference Intervals & Analytical Caveats (6th Edition)",
+        "url": "https://www.elsevier.com/books/tietz-textbook-of-clinical-chemistry-and-molecular-diagnostics"
+      }
+    ]
+  }
+}
+

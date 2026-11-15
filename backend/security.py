@@ -123,3 +123,4 @@ def verify_honeypot(trap_value: Optional[str]):
             status_code=400,
             detail="Automated bot submission detected via honeypot trap."
         )
+

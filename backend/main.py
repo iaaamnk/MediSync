@@ -11,14 +11,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from backend.records_store import records_store
-from backend.gemini_analyzer import gemini_analyzer
+from backend.extractor import document_extractor
+from backend.parameter_parser import parameter_parser
+from backend.rag_engine import rag_engine
+from backend.medgemma_connector import medgemma_connector
 from backend.voice_pipeline import voice_pipeline
 from backend.security import inspect_request_for_bots, verify_honeypot
 
 app = FastAPI(
     title="MediSync Hospital Dashboard API",
-    description="Hospital Dashboard System with Patient Portal, Doctor Portal, Gemini Medical Report Analyzer, QR Code Access, Voice Pipeline, and Appointment Booking.",
-    version="1.0.0"
+    description="Hospital Dashboard System with Patient Portal, Doctor Portal, MedGemma/Gemini RAG Medical Report Analyzer, QR Code Access, Voice Pipeline, and Appointment Booking.",
+    version="2.0.0"
 )
 
 # Bot Protection & Security Headers Middleware
@@ -88,6 +91,14 @@ class VoiceQueryRequest(BaseModel):
 
 # Endpoints
 
+@app.get("/api/knowledge-base")
+async def get_medical_knowledge_base():
+    """
+    Returns the structured medical knowledge base covering test descriptions,
+    reference range limitations guide, and authoritative citations.
+    """
+    return rag_engine.kb
+
 @app.post("/api/analyze-report")
 async def analyze_report(
     file: UploadFile = File(...),
@@ -106,19 +117,36 @@ async def analyze_report(
         with open(file_path, "wb") as f:
             f.write(content)
 
-        # AI analysis with medical safety guardrails
-        analysis = await gemini_analyzer.analyze_document(
-            file_bytes=content,
-            filename=filename,
-            mime_type=file.content_type or "application/octet-stream"
+        # 1. Document Extraction (PDF & Image table/text parser)
+        doc_data = document_extractor.extract_from_bytes(content, filename, file.content_type or "")
+        extracted_text = doc_data.get("full_text", "")
+
+        # 2. Extract Metadata & Lab Parameters
+        metadata = parameter_parser.extract_metadata(extracted_text)
+        if patient_name and patient_name != "Anonymous Patient":
+            metadata["patient_name"] = patient_name
+
+        detected_parameters = parameter_parser.parse_parameters(extracted_text)
+
+        # 3. Retrieve Medical Knowledge Base Context via RAG Engine
+        rag_context = rag_engine.retrieve_context_for_parameters(detected_parameters)
+
+        # 4. Generate Grounded Structured Analysis via MedGemma Connector
+        analysis = await medgemma_connector.generate_structured_analysis(
+            extracted_text=extracted_text,
+            detected_parameters=detected_parameters,
+            rag_context=rag_context,
+            metadata=metadata,
+            filename=filename
         )
 
-        # Store record
+        # 5. Store Record in Database
         report_data = {
-            "patient_name": patient_name,
+            "patient_name": metadata.get("patient_name") or patient_name,
             "filename": filename,
             "file_path": file_path,
             "report_notes": report_notes,
+            "extracted_raw_text": extracted_text[:2000],
             "analysis": analysis,
             "doctor_notes": []
         }
@@ -142,7 +170,7 @@ async def inject_sample_report(sample_type: str = "cbc", patient_name: str = "Sa
     sample_texts = {
         "cbc": """COMPLETE BLOOD COUNT (CBC) & HEMATOLOGY PANEL
 Patient: Sarah Connor | Age: 34 | Sex: Female
-Date: 2026-11-03 | Lab Ref: LAB-77291
+Date: 2026-11-15 | Lab Ref: LAB-77291
 Parameter          Observed Value    Reference Interval    Status
 Hemoglobin         11.4 g/dL         12.0 - 15.5 g/dL      Low
 RBC Count          4.1 mil/µL        4.0 - 5.2 mil/µL      Normal
@@ -152,36 +180,57 @@ Hematocrit         35.2 %            36.0 - 46.0 %         Low
 MCV                82.0 fL           80.0 - 100.0 fL       Normal
 Remarks: Specimen satisfactory. Routine wellness evaluation.""",
 
-        "lipid": """COMPREHENSIVE LIPID PROFILE
-Patient: David Miller | Age: 48 | Sex: Male
-Date: 2026-11-03 | Lab Ref: LIP-99021
+        "thyroid": """COMPREHENSIVE THYROID FUNCTION PROFILE
+Patient: David Miller | Age: 45 | Sex: Male
+Date: 2026-11-15 | Lab Ref: THY-88410
 Parameter          Observed Value    Reference Interval    Status
-Total Cholesterol  218 mg/dL         125 - 200 mg/dL       High
-HDL Cholesterol    44 mg/dL          40 - 60 mg/dL         Normal
-LDL Cholesterol    132 mg/dL         50 - 100 mg/dL        High
-Triglycerides      185 mg/dL         50 - 150 mg/dL        High
-VLDL               36 mg/dL          5 - 30 mg/dL          Borderline High
-Remarks: Fasting 12 hours noted.""",
+TSH                5.20 µIU/mL       0.40 - 4.50 µIU/mL    High
+Free T4 (FT4)      1.15 ng/dL        0.80 - 1.80 ng/dL     Normal
+Remarks: Patient asymptomatic. Repeat TSH recommended in 6-8 weeks.""",
 
-        "metabolic": """METABOLIC & GLUCOSE PANEL
-Patient: Anita Roy | Age: 42 | Sex: Female
-Date: 2026-11-03 | Lab Ref: MET-55102
+        "liver": """COMPREHENSIVE HEPATIC & LIVER FUNCTION PANEL
+Patient: Elena Rossi | Age: 38 | Sex: Female
+Date: 2026-11-15 | Lab Ref: LFT-33921
 Parameter          Observed Value    Reference Interval    Status
-Fasting Glucose    108 mg/dL         70 - 99 mg/dL         High
-HbA1c              5.8 %             4.0 - 5.6 %           Borderline High
-Creatinine         0.85 mg/dL        0.6 - 1.2 mg/dL       Normal
-Blood Urea (BUN)   14.0 mg/dL        7 - 20 mg/dL          Normal
-Remarks: Patient asymptomatic, routine annual screen."""
+ALT (SGPT)         58 U/L            7 - 35 U/L            High
+AST (SGOT)         44 U/L            10 - 40 U/L           High
+ALP                85 U/L            44 - 147 U/L          Normal
+Total Bilirubin    0.9 mg/dL         0.2 - 1.2 mg/dL       Normal
+Remarks: Recent strenuous physical training noted prior to blood draw.""",
+
+        "kidney": """RENAL FUNCTION & METABOLIC PANEL
+Patient: Robert Vance | Age: 54 | Sex: Male
+Date: 2026-11-15 | Lab Ref: KFT-44109
+Parameter          Observed Value    Reference Interval    Status
+Serum Creatinine   1.35 mg/dL        0.70 - 1.30 mg/dL     High
+eGFR               58 mL/min/1.73m²  ≥ 90 mL/min/1.73m²    Low
+Blood Urea (BUN)   24.0 mg/dL        7.0 - 20.0 mg/dL      High
+Uric Acid          6.8 mg/dL         3.5 - 7.2 mg/dL       Normal
+Remarks: Patient active in weight training. Mild fluid restriction reported."""
     }
 
     raw_text = sample_texts.get(sample_type, sample_texts["cbc"])
-    analysis = gemini_analyzer._intelligent_fallback_analyzer(raw_text, f"Sample_{sample_type.upper()}_Report.txt")
+    filename = f"Sample_{sample_type.upper()}_Report.txt"
+    
+    metadata = parameter_parser.extract_metadata(raw_text)
+    metadata["patient_name"] = patient_name
+
+    detected_parameters = parameter_parser.parse_parameters(raw_text)
+    rag_context = rag_engine.retrieve_context_for_parameters(detected_parameters)
+    analysis = await medgemma_connector.generate_structured_analysis(
+        extracted_text=raw_text,
+        detected_parameters=detected_parameters,
+        rag_context=rag_context,
+        metadata=metadata,
+        filename=filename
+    )
 
     report_data = {
         "patient_name": patient_name,
-        "filename": f"Sample_{sample_type.upper()}_Report.txt",
+        "filename": filename,
         "file_path": None,
-        "report_notes": f"Auto-generated {sample_type.upper()} clinical laboratory test for demonstration",
+        "report_notes": f"Verified {sample_type.upper()} clinical laboratory test for demonstration",
+        "extracted_raw_text": raw_text,
         "analysis": analysis,
         "doctor_notes": []
     }

@@ -68,7 +68,7 @@ function switchPortal(portal) {
 
 // Subtab Switching (Patient)
 function switchPatientTab(tabId) {
-  const tabs = ["analyze", "book", "my-appts", "voice"];
+  const tabs = ["analyze", "kb", "book", "my-appts", "voice"];
   tabs.forEach(t => {
     const el = document.getElementById(`patient-tab-${t}`);
     if (el) el.style.display = (t === tabId) ? "block" : "none";
@@ -81,6 +81,8 @@ function switchPatientTab(tabId) {
 
   if (tabId === "my-appts") {
     loadPatientAppointments();
+  } else if (tabId === "kb") {
+    loadMedicalKnowledgeBase();
   }
 }
 
@@ -223,6 +225,12 @@ function renderAnalysis(record) {
   document.getElementById("report-meta-display").innerText = `Patient: ${record.patient_name} • Specimen: ${analysis.sample_date_detected || "Analyzed"} • Token: ${record.token}`;
   document.getElementById("report-overview-text").innerText = analysis.summary_overview || "Detailed laboratory summary.";
 
+  // AI Engine Badge
+  const engineBadge = document.getElementById("ai-engine-badge");
+  if (engineBadge) {
+    engineBadge.innerText = analysis.ai_engine || "MedGemma RAG";
+  }
+
   // Parameters Table
   const tbody = document.getElementById("param-table-body");
   tbody.innerHTML = "";
@@ -236,10 +244,14 @@ function renderAnalysis(record) {
     else if (statusLower.includes("low") || statusLower.includes("decreased")) badgeClass = "badge-low";
     else if (statusLower.includes("borderline")) badgeClass = "badge-borderline";
 
+    const limitationsHtml = p.biological_limitations ? 
+      `<div style="font-size: 0.76rem; color: #b45309; margin-top: 3px;">⚠️ <em>Pre-analytical variation: ${p.biological_limitations}</em></div>` : "";
+
     tr.innerHTML = `
       <td>
         <div class="param-name">${p.name}</div>
         <div class="param-desc">${p.explanation || ""}</div>
+        ${limitationsHtml}
       </td>
       <td><strong>${p.value}</strong></td>
       <td style="color: var(--gray-600);">${p.reference_range || "N/A"}</td>
@@ -265,6 +277,39 @@ function renderAnalysis(record) {
     li.innerText = q;
     qList.appendChild(li);
   });
+
+  // Reference Range Limitations Guide
+  const limList = document.getElementById("reference-limitations-list");
+  if (limList) {
+    limList.innerHTML = "";
+    const limitations = analysis.reference_range_limitations || [];
+    if (limitations.length === 0) {
+      limList.innerHTML = `<li>Reference intervals represent a 95% statistical confidence interval of a healthy population; single slight deviations are common and non-diagnostic.</li>`;
+    } else {
+      limitations.forEach(lim => {
+        const li = document.createElement("li");
+        li.innerText = lim;
+        limList.appendChild(li);
+      });
+    }
+  }
+
+  // Authoritative Sources Cited
+  const sourcesContainer = document.getElementById("sources-cited-badges");
+  if (sourcesContainer) {
+    sourcesContainer.innerHTML = "";
+    const sources = analysis.authoritative_sources || [];
+    sources.forEach(s => {
+      const span = document.createElement("a");
+      span.href = s.url || "#";
+      span.target = "_blank";
+      span.className = "chip-btn";
+      span.style.fontSize = "0.72rem";
+      span.style.textDecoration = "none";
+      span.innerText = `📖 ${s.organization || s.resource || s}`;
+      sourcesContainer.appendChild(span);
+    });
+  }
 
   // QR Code Pass
   const qrCard = document.getElementById("qr-access-card");
@@ -762,6 +807,78 @@ function speakText(text) {
 function speakLastResponse() {
   if (lastVoiceTextResponse) {
     speakText(lastVoiceTextResponse);
+  }
+}
+
+// ==========================================
+// MEDICAL KNOWLEDGE BASE & LAB GUIDE LOADER
+// ==========================================
+async function loadMedicalKnowledgeBase() {
+  try {
+    const res = await fetch("/api/knowledge-base");
+    const kb = await res.json();
+
+    // 1. Render Panels Grid
+    const panelsGrid = document.getElementById("kb-panels-grid");
+    if (panelsGrid && kb.panels) {
+      panelsGrid.innerHTML = Object.entries(kb.panels).map(([key, p]) => `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title" style="font-size: 1.05rem;">
+              <span>${key === 'cbc' ? '🩸' : (key === 'thyroid' ? '🦋' : (key === 'liver' ? '🫀' : (key === 'kidney' ? '🧪' : '📊')))}</span>
+              ${p.name}
+            </h3>
+            <span class="badge badge-normal" style="font-size: 0.7rem;">Clinical Panel</span>
+          </div>
+          <p style="font-size: 0.88rem; color: var(--gray-700); margin-bottom: 0.75rem; line-height: 1.5;">
+            ${p.clinical_overview}
+          </p>
+          <div style="background: var(--gray-50); padding: 0.65rem 0.85rem; border-radius: 8px; font-size: 0.8rem; margin-bottom: 0.65rem;">
+            <strong>Clinical Purpose:</strong> ${p.clinical_purpose}
+          </div>
+          <div style="font-size: 0.78rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+            <strong>Key Indicators:</strong> ${p.primary_indicators ? p.primary_indicators.join(" • ") : ""}
+          </div>
+          <div style="font-size: 0.75rem; color: var(--primary-dark); font-weight: 600;">
+            📖 Reference Source: ${p.reference_source}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // 2. Render Core Interpretation Principles Grid
+    const principlesGrid = document.getElementById("kb-principles-grid");
+    if (principlesGrid && kb.reference_range_limitations_guide?.core_principles) {
+      principlesGrid.innerHTML = kb.reference_range_limitations_guide.core_principles.map((cp, idx) => `
+        <div style="background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 10px; padding: 1rem;">
+          <h4 style="font-size: 0.92rem; font-weight: 700; color: #0f766e; margin-bottom: 0.35rem;">
+            ${idx + 1}. ${cp.principle}
+          </h4>
+          <p style="font-size: 0.84rem; color: var(--gray-700); line-height: 1.5;">
+            ${cp.explanation}
+          </p>
+        </div>
+      `).join("");
+    }
+
+    // 3. Render Authoritative References
+    const refList = document.getElementById("kb-references-list");
+    if (refList && kb.reference_range_limitations_guide?.authoritative_references) {
+      refList.innerHTML = kb.reference_range_limitations_guide.authoritative_references.map(r => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <strong style="font-size: 0.92rem; color: var(--gray-800); display: block;">${r.organization}</strong>
+            <span style="font-size: 0.82rem; color: var(--gray-600);">${r.resource}</span>
+          </div>
+          <a href="${r.url}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 0.78rem; text-decoration: none;">
+            Explore Guidelines ↗
+          </a>
+        </div>
+      `).join("");
+    }
+
+  } catch (e) {
+    console.error("Failed to load medical knowledge base:", e);
   }
 }
 
