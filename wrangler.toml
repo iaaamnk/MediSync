@@ -1,8 +1,7 @@
 name = "medisync"
 compatibility_date = "2024-09-23"
 
-# Cloudflare Static Assets configuration for Flutter Web build
+# Cloudflare Static Assets configuration for Flutter Web build (Assets-only mode)
 [assets]
 directory = "flutter_frontend/build/web"
-binding = "ASSETS"
 not_found_handling = "single-page-application"
