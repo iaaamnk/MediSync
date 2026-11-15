@@ -271,7 +271,7 @@ class _PatientPortalScreenState extends State<PatientPortalScreen> with SingleTi
                   children: [
                     Text(_currentReport!.reportTitle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 4),
-                    Text(_currentReport!.summaryOverview, style: const TextStyle(color: Colors.black8 dominantColor ?? Colors.black87, fontSize: 13)),
+                    Text(_currentReport!.summaryOverview, style: const TextStyle(color: Colors.black87, fontSize: 13)),
                     const Divider(height: 24),
                     const Text("Laboratory Indicators & Reference Norms:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 8),

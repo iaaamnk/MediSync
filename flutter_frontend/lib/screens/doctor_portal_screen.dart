@@ -85,7 +85,7 @@ class _DoctorPortalScreenState extends State<DoctorPortalScreen> with SingleTick
           child: TabBar(
             controller: _tabController,
             labelColor: const Color(0xFF0F766E),
-            unselectedColor: Colors.grey.shade600,
+            unselectedLabelColor: Colors.grey.shade600,
             indicatorColor: const Color(0xFF0F766E),
             indicatorWeight: 3,
             tabs: const [
